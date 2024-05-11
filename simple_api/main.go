@@ -15,7 +15,7 @@ func main() {
 
 	fmt.Println("Welcome to Rest API Golang!!")
 	config.ConnectDatabase()
-	config.ConnectFirebaseStorage()
+	// config.ConnectFirebaseStorage()
 	r := gin.Default()
 	r.GET("api/comment", controllers.All)
 	r.GET("api/comment/:id", controllers.Index)
