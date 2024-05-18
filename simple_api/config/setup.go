@@ -18,7 +18,7 @@ var DB *gorm.DB
 var BucketHandle *storage.BucketHandle
 
 func ConnectDatabase() {
-	database, err := gorm.Open(mysql.Open("root:@dm1n1994@tcp(localhost:3306)/cource_net"))
+	database, err := gorm.Open(mysql.Open("root:xxx@tcp(localhost:3306)/yyy"))
 	if err != nil {
 		panic(err)
 	}
@@ -34,7 +34,7 @@ func ConnectFirebaseStorage() {
 
 	}
 
-	client, err := app.Storage(context.TODO())
+	client, err := app.Storage(context.Background())
 	if err != nil {
 		panic(err)
 

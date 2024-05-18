@@ -2,13 +2,16 @@ package controllers
 
 import (
 	"example/simple_api/config"
+	"io"
 	"os"
 
 	"example/simple_api/models/entity"
 	"net/http"
+	"net/url"
 
 	"github.com/gin-gonic/gin"
 
+	"google.golang.org/appengine"
 	// "github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -76,18 +79,44 @@ func Delete(c *gin.Context) {
 }
 
 func Upload(c *gin.Context) {
-	data, errReq := c.MultipartForm()
+	nameBucket := os.Getenv("BUCKET_NAME")
+	ctx := appengine.NewContext(c.Request)
+	file, data, errReq := c.Request.FormFile("photo")
 	if errReq != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": errReq.Error()})
 	}
 
-	file := data.File["file"][0]
-	errSaveFile := c.SaveUploadedFile(file, "./image/"+file.Filename)
+	fileName := data.Filename
 
-	if errSaveFile != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": errSaveFile.Error()})
+	filePath := config.BucketHandle.Object(fileName).NewWriter(ctx)
+
+	if _, err := io.Copy(filePath, file); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": err.Error(),
+			"error":   true,
+		})
+		return
 	}
 
-	_, _ = os.Open("./image/" + file.Filename)
-	c.JSON(http.StatusOK, gin.H{"data": "./image/" + file.Filename})
+	if err := filePath.Close(); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": err.Error(),
+			"error":   true,
+		})
+		return
+	}
+
+	u, err := url.Parse("/" + nameBucket + "/" + filePath.Attrs().Name)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": err.Error(),
+			"Error":   true,
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":  "file uploaded successfully",
+		"pathname": u.EscapedPath(),
+	})
 }

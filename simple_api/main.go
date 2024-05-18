@@ -14,8 +14,9 @@ func main() {
 	godotenv.Load("config/app.env")
 
 	fmt.Println("Welcome to Rest API Golang!!")
-	config.ConnectDatabase()
-	// config.ConnectFirebaseStorage()
+	// config.ConnectDatabase()
+
+	config.ConnectFirebaseStorage()
 	r := gin.Default()
 	r.GET("api/comment", controllers.All)
 	r.GET("api/comment/:id", controllers.Index)
